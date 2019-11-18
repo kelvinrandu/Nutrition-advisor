@@ -1,116 +1,43 @@
 <?php
+// Reads the variables sent via POST from our gateway
+$sessionId   = $_POST["sessionId"];
+$serviceCode = $_POST["serviceCode"];
+$phoneNumber = $_POST["phoneNumber"];
+$text        = $_POST["text"];
 
-ini_set('error_log', 'ussd-app-error.log');
+if ($text == "") {
+    // This is the first request. Note how we start the response with CON
+    $response  = "CON What would you want to check \n";
+    $response .= "1. My Account \n";
+    $response .= "2. My phone number";
 
-require 'libs/MoUssdReceiver.php';
-require 'libs/MtUssdSender.php';
-require 'class/operationsClass.php';
-require 'log.php';
-require 'db.php';
+} else if ($text == "1") {
+    // Business logic for first level response
+    $response = "CON Choose account information you want to view \n";
+    $response .= "1. Account number \n";
+    $response .= "2. Account balance";
 
+} else if ($text == "2") {
+    // Business logic for first level response
+    // This is a terminal request. Note how we start the response with END
+    $response = "END Your phone number is ".$phoneNumber;
 
-$production=false;
+} else if($text == "1*1") { 
+    // This is a second level response where the user selected 1 in the first instance
+    $accountNumber  = "ACC1001";
 
-	if($production==false){
-		$ussdserverurl ='http://localhost:7000/ussd/send';
-	}
-	else{
-		$ussdserverurl= 'https://api.dialog.lk/ussd/send';
-	}
+    // This is a terminal request. Note how we start the response with END
+    $response = "END Your account number is ".$accountNumber;
 
+} else if ( $text == "1*2" ) {
+    // This is a second level response where the user selected 1 in the first instance
+    $balance  = "KES 10,000";
 
-$receiver 	= new UssdReceiver();
-$sender 	= new UssdSender($ussdserverurl,'APP_000001','password');
-$operations = new Operations();
-
-$receiverSessionId = $receiver->getSessionId();
-$content 			= 	$receiver->getMessage(); // get the message content
-$address 			= 	$receiver->getAddress(); // get the sender's address
-$requestId 			= 	$receiver->getRequestID(); // get the request ID
-$applicationId 		= 	$receiver->getApplicationId(); // get application ID
-$encoding 			=	$receiver->getEncoding(); // get the encoding value
-$version 			= 	$receiver->getVersion(); // get the version
-$sessionId 			= 	$receiver->getSessionId(); // get the session ID;
-$ussdOperation 		= 	$receiver->getUssdOperation(); // get the ussd operation
-
-
-$responseMsg = array(
-    "main" =>
-    "Language
-1. What is P.E.M
-2. List symptoms
-3. Check symptoms
-
-99. Exit"
-);
-
-
-if ($ussdOperation  == "mo-init") {
-
-	try {
-
-		$sessionArrary=array( "sessionid"=>$sessionId,"tel"=>$address,"menu"=>"main","pg"=>"","others"=>"");
-
-  		$operations->setSessions($sessionArrary);
-
-		$sender->ussd($sessionId, $responseMsg["main"],$address );
-
-	} catch (Exception $e) {
-			$sender->ussd($sessionId, 'Sorry error occured try again',$address );
-	}
-
-}else {
-
-	$flag=0;
-
-  	$sessiondetails=  $operations->getSession($sessionId);
-  	$cuch_menu=$sessiondetails['menu'];
-  	$operations->session_id=$sessiondetails['sessionsid'];
-
-		switch($cuch_menu ){
-
-			case "main": 	// Following is the main menu
-					switch ($receiver->getMessage()) {
-						case "1":
-							$operations->session_menu="What is P.E.M";
-							$operations->saveSesssion();
-							$sender->ussd($sessionId,'Enter Your ID',$address );
-							break;
-						case "2":
-							$operations->session_menu="List symptoms";
-							$operations->saveSesssion();
-							$sender->ussd($sessionId,'Enter Your ID',$address );
-							break;
-						case "3":
-							$operations->session_menu="Check symptoms";
-							$operations->saveSesssion();
-							$sender->ussd($sessionId,'Enter Your ID',$address );
-							break;
-						default:
-							$operations->session_menu="main";
-							$operations->saveSesssion();
-							$sender->ussd($sessionId, $responseMsg["main"],$address );
-							break;
-					}
-					break;
-			case "What is P.E.M":
-				$operations->session_menu="List symptoms";
-				$operations->session_others=$receiver->getMessage();
-				$operations->saveSesssion();
-			//	$sender->ussd($sessionId,'You Purchased a small T-Shirt Your ID '.$receiver->getMessage(),$address ,'mt-fin');
-			$sender->ussd($sessionId,' '.$receiver->getMessage(),$address ,'mt-fin');
-				break;
-			case "List symptoms":
-				$sender->ussd($sessionId,'You Purchased a medium T-Shirt Your ID '.$receiver->getMessage(),$address ,'mt-fin');
-				break;
-			case "Check symptoms":
-				$sender->ussd($sessionId,'You Purchased a large T-Shirt Your ID '.$receiver->getMessage(),$address ,'mt-fin');
-				break;
-			default:
-				$operations->session_menu="main";
-				$operations->saveSesssion();
-				$sender->ussd($sessionId,'Incorrect option',$address );
-				break;
-		}
-
+    // This is a terminal request. Note how we start the response with END
+    $response = "END Your balance is ".$balance;
 }
+
+// Echo the response back to the API
+header('Content-type: text/plain');
+echo $response;
+USSD
