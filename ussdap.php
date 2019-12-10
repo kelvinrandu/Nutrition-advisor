@@ -64,7 +64,12 @@ if ($text == "") {
     $response = "END Protein–energy malnutrition (PEM) is a form of malnutrition that is defined as a range of pathological conditions arising from coincident lack of dietary protein and/or energy (calories) in varying proportions.  ";
 }else if ( $text == "4*3" ) {
     // level 3 english types of P.E.M
-    $response = "END Protein–energy malnutrition (PEM) is a form of malnutrition that is defined as a range of pathological conditions arising from coincident lack of dietary protein and/or energy (calories) in varying proportions.  ";
+    $response  = "CON Types of P.E.M \n";
+    $response .= "1. Marasmus \n";
+    $response .= "2. Kwashiorkor \n";
+    $response .= "3. Marasmus-Kwashiokor\n";
+    $response .= "4. Back\n";
+    $response .= "5. Exit";
 }
 
 // Echo the response back to the API
